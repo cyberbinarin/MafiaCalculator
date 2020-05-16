@@ -124,7 +124,7 @@ namespace {
 		_AdvanceAllPhases(result);
 		StateMerger::MergeSimilarStates(result);
 
-		return {result.begin(), result.end()};
+		return result;
 	}
 
 	std::vector<GameState> _GetFollowingStatesNightDetective(const GameState& a_inState)
@@ -164,7 +164,7 @@ namespace {
 		_AdvanceAllPhases(states);
 		StateMerger::MergeSimilarStates(states);
 
-		return {states.begin(), states.end()};
+		return states;
 	}
 
 	std::vector<GameState> _GetFollowingStatesNightMafia(const GameState& a_inState)
@@ -215,7 +215,7 @@ namespace {
 		_AdvanceAllPhases(result);
 		StateMerger::MergeSimilarStates(result);
 
-		return {result.begin(), result.end()};
+		return result;
 	}
 
 }
