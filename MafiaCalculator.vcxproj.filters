@@ -10,9 +10,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Source\DetectiveState.h">
-      <Filter>Source</Filter>
-    </ClInclude>
     <ClInclude Include="Source\GameState.h">
       <Filter>Source</Filter>
     </ClInclude>
@@ -29,6 +26,9 @@
       <Filter>Source</Filter>
     </ClInclude>
     <ClInclude Include="Source\StateSimulator.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\PersonExposedAmount.h">
       <Filter>Source</Filter>
     </ClInclude>
   </ItemGroup>

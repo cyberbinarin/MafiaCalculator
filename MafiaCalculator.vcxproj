@@ -139,9 +139,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="Source\DetectiveState.h" />
     <ClInclude Include="Source\GameState.h" />
     <ClInclude Include="Source\Number.h" />
+    <ClInclude Include="Source\PersonExposedAmount.h" />
     <ClInclude Include="Source\PersonState.h" />
     <ClInclude Include="Source\Roles.h" />
     <ClInclude Include="Source\StateMerger.h" />

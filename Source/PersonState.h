@@ -1,13 +1,15 @@
 #pragma once
 
+#include <cassert>
 #include <memory>
+#include "PersonExposedAmount.h"
 #include "Roles.h"
 
 class PersonState {
 public:
 	const unsigned char m_id;
 	const Role m_role;
-	bool m_exposed{false};
+	PersonExposedAmount m_exposedAmount{PersonExposedAmount::None};
 
 	PersonState(unsigned char a_id, Role a_role)
 		: m_id(a_id)
@@ -15,11 +17,11 @@ public:
 	{
 	}
 
-	virtual std::shared_ptr<PersonState> CreateExposedCopy() const
+	PersonState(const PersonState& a_state, PersonExposedAmount a_exposedAmount)
+		: m_id(a_state.m_id)
+		, m_role(a_state.m_role)
+		, m_exposedAmount(a_exposedAmount)
 	{
-		auto result{std::make_shared<PersonState>(*this)};
-		result->m_exposed = true;
-		return result;
 	}
 
 };

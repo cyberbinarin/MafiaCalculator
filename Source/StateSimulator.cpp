@@ -21,20 +21,22 @@ namespace {
 		a_vect.pop_back();
 	}
 
-	bool _ShouldDetectiveExposeThemselves(const DetectiveState& a_state, const GameState& a_currentState)
+	bool _ShouldDetectiveExposeThemselves(const PersonState& a_detectiveState, const GameState& a_currentState)
 	{
-		for (auto inspectedId : a_state.m_inspectedPeople) {
-			for (const auto& otherPerson : a_currentState.m_personStates)
-			{
-				if (otherPerson->m_id == inspectedId)
-				{
-					if (otherPerson->m_role == Role::Mafia)
-					{
-						return true;
-					}
-					break;
-				}
-			}
+		if (a_detectiveState.m_exposedAmount == PersonExposedAmount::RoleExposed)
+			return false;
+		
+		//If any other detective are more exposed, return false
+		for (const auto& otherPerson : a_currentState.m_personStates)
+		{
+			if (otherPerson->m_role == Role::Detective && otherPerson->m_id != a_detectiveState.m_id && otherPerson->m_exposedAmount > a_detectiveState.m_exposedAmount)
+				return false;
+		}
+		for (const auto& otherPerson : a_currentState.m_personStates)
+		{
+			//If a persons exposed amount is exactly investigated, they have been investigated but not exposed
+			if (otherPerson->m_role == Role::Mafia && otherPerson->m_exposedAmount == PersonExposedAmount::Investigated)
+				return true;
 		}
 		return false;
 	}
@@ -77,21 +79,20 @@ namespace {
 		for (auto& personState : a_state.m_personStates)
 		{
 			if (personState->m_role == Role::Detective) {
-				if (!personState->m_exposed && personState->m_role == Role::Detective &&
-					_ShouldDetectiveExposeThemselves(static_cast<const DetectiveState&>(*personState), a_state))
+				if (_ShouldDetectiveExposeThemselves(*personState, a_state))
 				{
-					personState = personState->CreateExposedCopy();
+					personState = std::make_shared<const PersonState>(*personState, PersonExposedAmount::RoleExposed);
 				}
-				if (personState->m_exposed)
+				if (personState->m_exposedAmount == PersonExposedAmount::RoleExposed)
 				{
-					const auto& inspectedPeople{static_cast<const DetectiveState&>(*personState).m_inspectedPeople};
 					for (auto& otherPersons : a_state.m_personStates)
 					{
-						if (!otherPersons->m_exposed && inspectedPeople.find(otherPersons->m_id) != inspectedPeople.end())
+						if (otherPersons->m_exposedAmount == PersonExposedAmount::Investigated)
 						{
-							otherPersons = otherPersons->CreateExposedCopy();
+							otherPersons = std::make_shared<const PersonState>(*otherPersons, PersonExposedAmount::AffiliationExposed);
 						}
 					}
+					break;
 				}
 			}
 		}
@@ -99,7 +100,7 @@ namespace {
 		//If there are any exposed Mafia, hang one
 		for (unsigned char i{0}; i < a_state.m_personStates.size(); ++i)
 		{
-			if (a_state.m_personStates[i]->m_exposed && a_state.m_personStates[i]->m_role == Role::Mafia) {
+			if (a_state.m_personStates[i]->m_exposedAmount >= PersonExposedAmount::AffiliationExposed && a_state.m_personStates[i]->m_role == Role::Mafia) {
 				auto newGameState{a_state};
 				_RemoveAtSwap(newGameState.m_personStates, i);
 				result.push_back(newGameState);
@@ -111,7 +112,7 @@ namespace {
 		{
 			//Hanging random people, except for exposed people
 			for (unsigned char i{0}; i < a_state.m_personStates.size(); ++i) {
-				if (!a_state.m_personStates[i] -> m_exposed)
+				if (a_state.m_personStates[i]->m_exposedAmount < PersonExposedAmount::AffiliationExposed)
 				{
 					auto newGameState{a_state};
 					_RemoveAtSwap(newGameState.m_personStates, i);
@@ -129,36 +130,33 @@ namespace {
 
 	std::vector<GameState> _GetFollowingStatesNightDetective(const GameState& a_inState)
 	{
-		std::vector<GameState> states{a_inState};
-
-		for (unsigned char i{0}; i < a_inState.m_personStates.size(); ++i)
+		bool anyDetectives{false};
+		for (const auto& personState : a_inState.m_personStates)
 		{
-			auto& personState{a_inState.m_personStates[i]};
 			if (personState->m_role == Role::Detective)
 			{
-				const auto& detectiveState{static_cast<const DetectiveState&>(*personState)};
-				std::vector<GameState> nextStates;
-				const auto& inspectedPeople{detectiveState.m_inspectedPeople};
-				for (auto& otherPersonState : a_inState.m_personStates)
-				{
-					if (personState->m_id != otherPersonState->m_id && inspectedPeople.find(otherPersonState->m_id) == inspectedPeople.end())
-					{
-						auto newDetectiveState{detectiveState.CreateCopyAndInspect(otherPersonState->m_id)};
-						for (const auto& state : states)
-						{
-							auto newGameState{state};
-							newGameState.m_personStates[i] = newDetectiveState;
-							nextStates.push_back(std::move(newGameState));
-						}
+				anyDetectives = true;
+				break;
+			}
+		}
 
-					}
-				}
-				if (nextStates.size() != 0)
+		std::vector<GameState> states;
+
+		if (anyDetectives) {
+			for (unsigned char i{0}; i < a_inState.m_personStates.size(); ++i)
+			{
+				const auto& personState{a_inState.m_personStates[i]};
+				if (personState->m_role != Role::Detective && personState->m_exposedAmount == PersonExposedAmount::None)
 				{
-					states = std::move(nextStates);
+					auto newGameState{a_inState};
+					newGameState.m_personStates[i] = std::make_shared<PersonState>(*personState, PersonExposedAmount::Investigated);
+					states.push_back(std::move(newGameState));
 				}
 			}
 		}
+
+		if (states.empty())
+			states.push_back(a_inState);
 
 		_DivideEachProbabilityWithSize(states);
 		_AdvanceAllPhases(states);
@@ -174,7 +172,7 @@ namespace {
 		//If there are any exposed detectives, murder one
 		for (unsigned char i{0}; i < a_inState.m_personStates.size(); ++i)
 		{
-			if (a_inState.m_personStates[i] -> m_exposed && a_inState.m_personStates[i] -> m_role == Role::Detective)
+			if (a_inState.m_personStates[i]->m_exposedAmount == PersonExposedAmount::RoleExposed && a_inState.m_personStates[i] -> m_role == Role::Detective)
 			{
 				auto newGameState{a_inState};
 				_RemoveAtSwap(newGameState.m_personStates, i);
@@ -188,7 +186,7 @@ namespace {
 			//If there are any exposed villagers, murder one
 			for (unsigned char i{0}; i < a_inState.m_personStates.size(); ++i)
 			{
-				if (a_inState.m_personStates[i] -> m_exposed && a_inState.m_personStates[i] -> m_role == Role::Villager)
+				if (a_inState.m_personStates[i]->m_exposedAmount >= PersonExposedAmount::AffiliationExposed && a_inState.m_personStates[i] -> m_role == Role::Villager)
 				{
 					auto newGameState{a_inState};
 					_RemoveAtSwap(newGameState.m_personStates, i);

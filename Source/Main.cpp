@@ -27,7 +27,7 @@ namespace {
 		}
 		for (unsigned char i{0}; i < detectives; ++i)
 		{
-			gameState.m_personStates.push_back(std::make_shared<DetectiveState>(static_cast<unsigned char>(gameState.m_personStates.size())));
+			gameState.m_personStates.push_back(std::make_shared<PersonState>(static_cast<unsigned char>(gameState.m_personStates.size()), Role::Detective));
 		}
 		while (static_cast<int>(gameState.m_personStates.size()) < players)
 		{
@@ -109,7 +109,7 @@ namespace {
 		{
 			for (int mafia{1}; mafia < players / 2; ++mafia)
 			{
-				for (int detectives{0}; detectives <= 1; ++detectives)
+				for (int detectives{0}; detectives < players - mafia; ++detectives)
 				{
 					std::cout << "Calculating " << players << " players " << mafia << " mafia member(s) " << detectives << "detective(s)\n";
 					long double villageProb{0};

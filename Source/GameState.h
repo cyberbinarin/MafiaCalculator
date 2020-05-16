@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vector>
-#include "DetectiveState.h"
+#include "PersonState.h"
 
 enum class DayPhase : unsigned char {
 	Day,
