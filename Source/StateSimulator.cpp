@@ -29,13 +29,13 @@ namespace {
 		//If any other detective are more exposed, return false
 		for (const auto& otherPerson : a_currentState.m_personStates)
 		{
-			if (otherPerson->m_role == Role::Detective && otherPerson->m_id != a_detectiveState.m_id && otherPerson->m_exposedAmount > a_detectiveState.m_exposedAmount)
+			if (otherPerson.GetRole() == Role::Detective && otherPerson.GetId() != a_detectiveState.GetId() && otherPerson.m_exposedAmount > a_detectiveState.m_exposedAmount)
 				return false;
 		}
 		for (const auto& otherPerson : a_currentState.m_personStates)
 		{
 			//If a persons exposed amount is exactly investigated, they have been investigated but not exposed
-			if (otherPerson->m_role == Role::Mafia && otherPerson->m_exposedAmount == PersonExposedAmount::Investigated)
+			if (otherPerson.GetRole() == Role::Mafia && otherPerson.m_exposedAmount == PersonExposedAmount::Investigated)
 				return true;
 		}
 		return false;
@@ -45,7 +45,7 @@ namespace {
 		unsigned char mafiaCount{0};
 		for (const auto& person : a_state.m_personStates)
 		{
-			if (person->m_role == Role::Mafia)
+			if (person.GetRole() == Role::Mafia)
 				++mafiaCount;
 		}
 		if (mafiaCount == 0)
@@ -78,18 +78,18 @@ namespace {
 		//Detectives can expose themselves. And then, any exposed detectives exposes all people they have investigated
 		for (auto& personState : a_state.m_personStates)
 		{
-			if (personState->m_role == Role::Detective) {
-				if (_ShouldDetectiveExposeThemselves(*personState, a_state))
+			if (personState.GetRole() == Role::Detective) {
+				if (_ShouldDetectiveExposeThemselves(personState, a_state))
 				{
-					personState = std::make_shared<const PersonState>(*personState, PersonExposedAmount::RoleExposed);
+					personState.m_exposedAmount = PersonExposedAmount::RoleExposed;
 				}
-				if (personState->m_exposedAmount == PersonExposedAmount::RoleExposed)
+				if (personState.m_exposedAmount == PersonExposedAmount::RoleExposed)
 				{
 					for (auto& otherPersons : a_state.m_personStates)
 					{
-						if (otherPersons->m_exposedAmount == PersonExposedAmount::Investigated)
+						if (otherPersons.m_exposedAmount == PersonExposedAmount::Investigated)
 						{
-							otherPersons = std::make_shared<const PersonState>(*otherPersons, PersonExposedAmount::AffiliationExposed);
+							otherPersons.m_exposedAmount = PersonExposedAmount::AffiliationExposed;
 						}
 					}
 					break;
@@ -100,7 +100,7 @@ namespace {
 		//If there are any exposed Mafia, hang one
 		for (unsigned char i{0}; i < a_state.m_personStates.size(); ++i)
 		{
-			if (a_state.m_personStates[i]->m_exposedAmount >= PersonExposedAmount::AffiliationExposed && a_state.m_personStates[i]->m_role == Role::Mafia) {
+			if (a_state.m_personStates[i].m_exposedAmount >= PersonExposedAmount::AffiliationExposed && a_state.m_personStates[i].GetRole() == Role::Mafia) {
 				auto newGameState{a_state};
 				_RemoveAtSwap(newGameState.m_personStates, i);
 				result.push_back(newGameState);
@@ -112,7 +112,7 @@ namespace {
 		{
 			//Hanging random people, except for exposed people
 			for (unsigned char i{0}; i < a_state.m_personStates.size(); ++i) {
-				if (a_state.m_personStates[i]->m_exposedAmount < PersonExposedAmount::AffiliationExposed)
+				if (a_state.m_personStates[i].m_exposedAmount < PersonExposedAmount::AffiliationExposed)
 				{
 					auto newGameState{a_state};
 					_RemoveAtSwap(newGameState.m_personStates, i);
@@ -133,7 +133,7 @@ namespace {
 		bool anyDetectives{false};
 		for (const auto& personState : a_inState.m_personStates)
 		{
-			if (personState->m_role == Role::Detective)
+			if (personState.GetRole() == Role::Detective)
 			{
 				anyDetectives = true;
 				break;
@@ -146,10 +146,10 @@ namespace {
 			for (unsigned char i{0}; i < a_inState.m_personStates.size(); ++i)
 			{
 				const auto& personState{a_inState.m_personStates[i]};
-				if (personState->m_role != Role::Detective && personState->m_exposedAmount == PersonExposedAmount::None)
+				if (personState.GetRole() != Role::Detective && personState.m_exposedAmount == PersonExposedAmount::None)
 				{
 					auto newGameState{a_inState};
-					newGameState.m_personStates[i] = std::make_shared<PersonState>(*personState, PersonExposedAmount::Investigated);
+					newGameState.m_personStates[i].m_exposedAmount = PersonExposedAmount::Investigated;
 					states.push_back(std::move(newGameState));
 				}
 			}
@@ -172,7 +172,7 @@ namespace {
 		//If there are any exposed detectives, murder one
 		for (unsigned char i{0}; i < a_inState.m_personStates.size(); ++i)
 		{
-			if (a_inState.m_personStates[i]->m_exposedAmount == PersonExposedAmount::RoleExposed && a_inState.m_personStates[i] -> m_role == Role::Detective)
+			if (a_inState.m_personStates[i].m_exposedAmount == PersonExposedAmount::RoleExposed && a_inState.m_personStates[i].GetRole() == Role::Detective)
 			{
 				auto newGameState{a_inState};
 				_RemoveAtSwap(newGameState.m_personStates, i);
@@ -186,7 +186,7 @@ namespace {
 			//If there are any exposed villagers, murder one
 			for (unsigned char i{0}; i < a_inState.m_personStates.size(); ++i)
 			{
-				if (a_inState.m_personStates[i]->m_exposedAmount >= PersonExposedAmount::AffiliationExposed && a_inState.m_personStates[i] -> m_role == Role::Villager)
+				if (a_inState.m_personStates[i].m_exposedAmount >= PersonExposedAmount::AffiliationExposed && a_inState.m_personStates[i].GetRole() == Role::Villager)
 				{
 					auto newGameState{a_inState};
 					_RemoveAtSwap(newGameState.m_personStates, i);
@@ -199,7 +199,7 @@ namespace {
 			{
 				//Mudering random people, except for mafia
 				for (unsigned char i{0}; i < a_inState.m_personStates.size(); ++i) {
-					if (a_inState.m_personStates[i] -> m_role != Role::Mafia)
+					if (a_inState.m_personStates[i].GetRole() != Role::Mafia)
 					{
 						auto newGameState{a_inState};
 						_RemoveAtSwap(newGameState.m_personStates, i);

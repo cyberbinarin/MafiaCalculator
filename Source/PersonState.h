@@ -7,8 +7,6 @@
 
 class PersonState {
 public:
-	const unsigned char m_id;
-	const Role m_role;
 	PersonExposedAmount m_exposedAmount{PersonExposedAmount::None};
 
 	PersonState(unsigned char a_id, Role a_role)
@@ -23,5 +21,20 @@ public:
 		, m_exposedAmount(a_exposedAmount)
 	{
 	}
+
+	unsigned char GetId() const
+	{
+		return m_id;
+	}
+
+	Role GetRole() const
+	{
+		return m_role;
+	}
+
+private:
+
+	unsigned char m_id;
+	Role m_role;
 
 };

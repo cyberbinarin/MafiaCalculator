@@ -23,15 +23,15 @@ namespace {
 
 		for (unsigned char i{0}; i < mafia; ++i)
 		{
-			gameState.m_personStates.push_back(std::make_shared<PersonState>(static_cast<unsigned char>(gameState.m_personStates.size()), Role::Mafia));
+			gameState.m_personStates.emplace_back(static_cast<unsigned char>(gameState.m_personStates.size()), Role::Mafia);
 		}
 		for (unsigned char i{0}; i < detectives; ++i)
 		{
-			gameState.m_personStates.push_back(std::make_shared<PersonState>(static_cast<unsigned char>(gameState.m_personStates.size()), Role::Detective));
+			gameState.m_personStates.emplace_back(static_cast<unsigned char>(gameState.m_personStates.size()), Role::Detective);
 		}
 		while (static_cast<int>(gameState.m_personStates.size()) < players)
 		{
-			gameState.m_personStates.push_back(std::make_shared<PersonState>(static_cast<unsigned char>(gameState.m_personStates.size()), Role::Villager));
+			gameState.m_personStates.emplace_back(static_cast<unsigned char>(gameState.m_personStates.size()), Role::Villager);
 		}
 
 		return gameState;
@@ -107,7 +107,7 @@ namespace {
 		myfile.close();
 		for (int players{3}; players <= 200; ++players)
 		{
-			for (int mafia{1}; mafia < players / 2; ++mafia)
+			for (int mafia{1}; mafia <= players / 2; ++mafia)
 			{
 				for (int detectives{0}; detectives < players - mafia; ++detectives)
 				{

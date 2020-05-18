@@ -16,7 +16,7 @@ struct GameState
 	//The probability that this state would be reached
 	long double m_inProbability{1};
 
-	std::vector<std::shared_ptr<const PersonState>> m_personStates;
+	std::vector<PersonState> m_personStates;
 
 	DayPhase m_dayPhase{DayPhase::Day};
 

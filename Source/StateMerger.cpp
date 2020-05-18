@@ -32,7 +32,7 @@ namespace
 
 	PersonSimilarityState _CreateSimilarityState(const PersonState& a_state)
 	{
-		return {a_state.m_role, a_state.m_exposedAmount};
+		return {a_state.GetRole(), a_state.m_exposedAmount};
 	}
 
 	std::map<PersonSimilarityState, unsigned char, SimilarityStateComparer> _CountSimilarityStates(const GameState& a_state)
@@ -40,15 +40,14 @@ namespace
 		std::map<PersonSimilarityState, unsigned char, SimilarityStateComparer> result{};
 		for (const auto& personState : a_state.m_personStates)
 		{
-			++result[_CreateSimilarityState(*personState)];
+			++result[_CreateSimilarityState(personState)];
 		}
 		return result;
 	}
 
 	bool _StatesAreSimilar(const GameState& a_lhs, const GameState& a_rhs)
 	{
-		if (_CountSimilarityStates(a_lhs) != _CountSimilarityStates(a_rhs))
-			return false;
+		return _CountSimilarityStates(a_lhs) == _CountSimilarityStates(a_rhs);
 	}
 
 	void _MergeStates(GameState& a_toMergeInto, const GameState& a_toMergeFrom)
